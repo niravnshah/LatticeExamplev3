@@ -62,7 +62,9 @@ def parse_file( file ):
 
     return funcs
 
-def gen_header( header_name ):
+def gen_header( header_dir, header_name ):
+    base_lib = os.path.join( header_dir, '..', 'build', 'lib', 'Debug', header_name + '_orig.dll')
+    base_lib = base_lib.replace('\\','\\\\')
     str = ''
     str += '//' + datetime.datetime.now().strftime("%H:%M:%S") + '\n'
     str += '#include <stdio.h>\n'
@@ -73,9 +75,9 @@ def gen_header( header_name ):
 void* GetFunctionPointer( const char* func_name )
 {
     static HMODULE lib = NULL;
-    if( lib == NULL )
-        lib = LoadLibraryEx( "C:\\\\NNS\\\\Backup\\\\VmVare\\\\LatticeExamplev3\\\\LatticeExamplev3\\\\build\\\\lib\\\\Debug\\\\lattice_orig.dll", NULL, 0 );
-    
+    if( lib == NULL )\n'''
+    str += '        lib = LoadLibraryEx( \"' + base_lib +'\", NULL, 0 );\n'
+    str += '''
     void* pfnptr = NULL;
     if( lib )
         pfnptr = GetProcAddress( lib, func_name );
@@ -137,11 +139,11 @@ def gen_return( func ):
     return str
 
 
-def generate_code( funcs, header_file, output_file ):
+def generate_code( funcs, header_dir, header_file, output_file ):
 
     fout = open(output_file, "w+")
     
-    str = gen_header( header_file )
+    str = gen_header( header_dir, header_file )
     fout.writelines( str )
 
     for func in funcs:
@@ -160,6 +162,7 @@ def generate_code( funcs, header_file, output_file ):
 def AutoGen():
 
     header_file = os.path.join('C:\\', 'NNS','Backup','VmVare','LatticeExamplev3','LatticeExamplev3','lib','lattice.h')
+    header_dir = os.path.dirname( header_file );
 
     autogen_dir = os.path.join('.','lib')
     if not os.path.exists(autogen_dir):
@@ -172,7 +175,7 @@ def AutoGen():
 
     funcs = parse_file( header_file )
 
-    generate_code( funcs, header_name, output_file )
+    generate_code( funcs, header_dir, header_name, output_file )
 
     print ( funcs )
 
