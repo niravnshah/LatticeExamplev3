@@ -2,7 +2,6 @@ import os, sys, re, ntpath, shutil,datetime
 
 
 def main():
-    
     AutoGen()
 
 def parse_file( file ):
@@ -64,7 +63,8 @@ def parse_file( file ):
     return funcs
 
 def gen_header( header_dir, header_name, base_lib ):
-    
+
+    log_name = 'logfile.log'
     str = ''
     str += '//' + datetime.datetime.now().strftime("%H:%M:%S") + '\n'
     str += '#include <stdio.h>\n'
@@ -72,12 +72,48 @@ def gen_header( header_dir, header_name, base_lib ):
     str += '#include \"' + header_name + '.h\"\n\n'
 
     str += '''
-void* GetFunctionPointer( const char* func_name )
+FILE* logfile = NULL;
+
+void log( const char* str )
+{
+    fprintf( logfile, "%s\\n", str );
+}
+void log_function_enter( const char* func_name )
+{
+    if( logfile != NULL )
+        logfile = fopen( "''' + log_name + '''", "a+" );
+    fprintf( logfile, "Enter : %s\\n", func_name );
+}
+void log_function_exit( const char* func_name )
+{
+    fprintf( logfile, "Exit  : %s\\n", func_name );
+    if( logfile != NULL )
+        fclose( logfile );
+}
+void log_start( const char* str = NULL )
+{
+    if( logfile != NULL )
+        logfile = fopen( "''' + log_name + '''", "a+" );
+    if( str != NULL )
+        fprintf( logfile, "%s\\n", str );
+}
+void log_end( const char* str = NULL )
+{
+    if( str != NULL )
+        fprintf( logfile, "%s\\n", str );
+    if( logfile != NULL )
+        fclose( logfile );
+}
+
+    '''
+
+    str += '''
+void* get_base_library_symbol( const char* func_name )
 {
     static HMODULE lib = NULL;
-    if( lib == NULL )\n'''
-    str += '        lib = LoadLibraryEx( \"' + base_lib +'\", NULL, 0 );\n'
-    str += '''
+    if( lib == NULL )\n
+        lib = LoadLibraryEx( "'''+ base_lib +'''", NULL, 0 );\n
+
     void* pfnptr = NULL;
     if( lib )
         pfnptr = GetProcAddress( lib, func_name );
@@ -92,7 +128,6 @@ def gen_func_header( func ):
         #    paramstr.append( param['type'] + ' ' + param['name'] )
         #str = func['ret_type'] + " " + func['fun_name'] + '( ' + ', '.join( paramstr ) + ' )'
     str = ''
-    str += 'typedef ' + func['ret_type'] + ' ( *pfn_' + func['fun_name'] + ' ) ( ' + ', '.join( [ (param['type']) for param in func['params'] ] ) + ' );\n'
     str += func['ret_type'] + " " + func['fun_name'] + '( ' + ', '.join( [ (param['type'] + ' ' + param['name']) for param in func['params'] ] ) + ' )'
     str += '\n{\n'
 
@@ -102,7 +137,7 @@ def gen_func_header( func ):
 def gen_pre( func ):
     str = '    // This section is pre processing\n'
     
-    str += '    printf(\"Entering ' + func['fun_name'] + '\\n\");\n'
+    str += '    log_start(\"Enter : ' + func['fun_name'] + '\\n\");\n'
 
     str += '\n'
     return str
@@ -111,19 +146,20 @@ def gen_pre( func ):
 def gen_post( func ):
     str = '    // This section is Post processing\n'
     
-    str += '    printf(\"Exiting ' + func['fun_name'] + '\\n\");\n'
+    str += '    log_end(\"Exit  : ' + func['fun_name'] + '\\n\");\n'
 
     str += '\n'
     return str
 
 
 def gen_call( func ):
-    str = '    '
-    str += 'pfn_' + func['fun_name'] + ' fnptr = ( pfn_' + func['fun_name'] + ' )GetFunctionPointer( \"' + func['fun_name'] + '\" );\n'
+    str = ''
+    str += '    typedef ' + func['ret_type'] + ' ( *pfn_' + func['fun_name'] + ' ) ( ' + ', '.join( [ (param['type']) for param in func['params'] ] ) + ' );\n'
+    str += '    pfn_' + func['fun_name'] + ' base_function = ( pfn_' + func['fun_name'] + ' ) get_base_library_symbol( \"' + func['fun_name'] + '\" );\n'
     str += '    '
     if func['ret_type'] != 'void':
         str += func['ret_type'] + ' ret_val = '
-    str += 'fnptr( ' + ', '.join( [ param['name'] for param in func['params'] ] ) + ' );\n'
+    str += 'base_function( ' + ', '.join( [ param['name'] for param in func['params'] ] ) + ' );\n'
 
     str += '\n'
     return str
