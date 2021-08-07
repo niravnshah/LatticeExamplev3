@@ -3,3 +3,4 @@ project(latticeexample LANGUAGES C)
 
 add_subdirectory(lib)
 add_subdirectory(bin)
+add_subdirectory(AutoGen/lib)
