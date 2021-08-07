@@ -1,4 +1,4 @@
-import os, sys, re
+import os, sys, re, ntpath, shutil,datetime
 
 
 def main():
@@ -37,7 +37,7 @@ def parse_file( file ):
                 lines = re.sub( r"([^\(]*?)\n(.*)",r"\2", lines, flags=re.MULTILINE | re.DOTALL )
 
         # match the function definition over multiple lines.
-        match = re.match( r"(.*?)\s*([^\s]*?)\s*\(\s*(.*?)\s*\)\s*;\s*(.*)", lines, flags=re.MULTILINE | re.DOTALL )
+        match = re.match( r"DLLENTRY (.*?)\s*([^\s]*?)\s*\(\s*(.*?)\s*\)\s*;\s*(.*)", lines, flags=re.MULTILINE | re.DOTALL )
         if match:
             params = [ s.strip() for s in match.group(3).replace("\n","").split(',') if s.strip() ]
             newparams = []
@@ -62,23 +62,68 @@ def parse_file( file ):
 
     return funcs
 
-def gen_header( func ):
+def gen_header( header_name ):
+    str = ''
+    str += '//' + datetime.datetime.now().strftime("%H:%M:%S") + '\n'
+    str += '#include <stdio.h>\n'
+    str += '#include \"Windows.h\"\n'
+    str += '#include \"' + header_name + '.h\"\n\n'
+
+    str += '''
+void* GetFunctionPointer( const char* func_name )
+{
+    static HMODULE lib = NULL;
+    if( lib == NULL )
+        lib = LoadLibraryEx( "C:\\\\NNS\\\\Backup\\\\VmVare\\\\LatticeExamplev3\\\\LatticeExamplev3\\\\build\\\\lib\\\\Debug\\\\lattice_orig.dll", NULL, 0 );
+    
+    void* pfnptr = NULL;
+    if( lib )
+        pfnptr = GetProcAddress( lib, func_name );
+    return pfnptr;
+}'''
+    str += '\n\n'
+    return str
+
+def gen_func_header( func ):
         #paramstr = []
         #for param in func['params']:
         #    paramstr.append( param['type'] + ' ' + param['name'] )
         #str = func['ret_type'] + " " + func['fun_name'] + '( ' + ', '.join( paramstr ) + ' )'
-    str = func['ret_type'] + " " + func['fun_name'] + '( ' + ', '.join( [ (param['type'] + ' ' + param['name']) for param in func['params'] ] ) + ' )'
-    str += '\n{\n    '
+    str = ''
+    str += 'typedef ' + func['ret_type'] + ' ( *pfn_' + func['fun_name'] + ' ) ( ' + ', '.join( [ (param['type']) for param in func['params'] ] ) + ' );\n'
+    str += func['ret_type'] + " " + func['fun_name'] + '( ' + ', '.join( [ (param['type'] + ' ' + param['name']) for param in func['params'] ] ) + ' )'
+    str += '\n{\n'
 
     return str;
 
 
+def gen_pre( func ):
+    str = '    // This section is pre processing\n'
+    
+    str += '    printf(\"Entering ' + func['fun_name'] + '\\n\");\n'
+
+    str += '\n'
+    return str
+
+
+def gen_post( func ):
+    str = '    // This section is Post processing\n'
+    
+    str += '    printf(\"Exiting ' + func['fun_name'] + '\\n\");\n'
+
+    str += '\n'
+    return str
+
+
 def gen_call( func ):
-    str = ''
+    str = '    '
+    str += 'pfn_' + func['fun_name'] + ' fnptr = ( pfn_' + func['fun_name'] + ' )GetFunctionPointer( \"' + func['fun_name'] + '\" );\n'
+    str += '    '
     if func['ret_type'] != 'void':
         str += func['ret_type'] + ' ret_val = '
-    str += func['fun_name'] + '( ' + ', '.join( [ param['name'] for param in func['params'] ] ) + ' );\n'
+    str += 'fnptr( ' + ', '.join( [ param['name'] for param in func['params'] ] ) + ' );\n'
 
+    str += '\n'
     return str
 
 
@@ -92,29 +137,42 @@ def gen_return( func ):
     return str
 
 
-def generate_code( funcs, file ):
+def generate_code( funcs, header_file, output_file ):
 
-    fout = open(file, "w+")
+    fout = open(output_file, "w+")
+    
+    str = gen_header( header_file )
+    fout.writelines( str )
+
     for func in funcs:
         str = ''
-        str += gen_header( func )
+        str += gen_func_header( func )
+        str += gen_pre( func )
         str += gen_call( func )
+        str += gen_post( func )
         str += gen_return( func )
 
-        fout.write( str )
-        fout.write("\n")
+        fout.writelines( str )
 
     fout.close()
 
 
 def AutoGen():
 
-    input_file = "lattice.h"
-    output_file = "lattice.c"
+    header_file = os.path.join('C:\\', 'NNS','Backup','VmVare','LatticeExamplev3','LatticeExamplev3','lib','lattice.h')
 
-    funcs = parse_file( input_file )
+    autogen_dir = os.path.join('.','lib')
+    if not os.path.exists(autogen_dir):
+        os.makedirs(autogen_dir)
 
-    generate_code( funcs, output_file )
+    header_name = os.path.splitext(os.path.basename(header_file))[0]
+    output_file = os.path.join( autogen_dir,header_name + '.c' )
+
+    shutil.copy( header_file, os.path.join( autogen_dir ) )
+
+    funcs = parse_file( header_file )
+
+    generate_code( funcs, header_name, output_file )
 
     print ( funcs )
 
