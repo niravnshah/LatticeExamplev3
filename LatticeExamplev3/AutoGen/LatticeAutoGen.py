@@ -6,6 +6,7 @@ def main():
     AutoGen()
 
 def parse_file( file ):
+    print( 'Parsing the file.. ' + file )
     fin = open(file, "r")
 
     fullfile = fin.read()
@@ -62,11 +63,10 @@ def parse_file( file ):
 
     return funcs
 
-def gen_header( header_dir, header_name ):
-    base_lib = os.path.join( header_dir, '..', 'build', 'lib', 'Debug', header_name + '_orig.dll')
-    base_lib = base_lib.replace('\\','\\\\')
+def gen_header( header_dir, header_name, base_lib ):
+    
     str = ''
-    #str += '//' + datetime.datetime.now().strftime("%H:%M:%S") + '\n'
+    str += '//' + datetime.datetime.now().strftime("%H:%M:%S") + '\n'
     str += '#include <stdio.h>\n'
     str += '#include \"Windows.h\"\n'
     str += '#include \"' + header_name + '.h\"\n\n'
@@ -139,11 +139,11 @@ def gen_return( func ):
     return str
 
 
-def generate_code( funcs, header_dir, header_file, output_file ):
-
+def generate_code( funcs, header_dir, header_file, base_lib, output_file ):
+    print( 'Generating code for.. ' + output_file)
     fout = open(output_file, "w+")
     
-    str = gen_header( header_dir, header_file )
+    str = gen_header( header_dir, header_file, base_lib )
     fout.writelines( str )
 
     for func in funcs:
@@ -161,23 +161,41 @@ def generate_code( funcs, header_dir, header_file, output_file ):
 
 def AutoGen():
 
-    header_file = os.path.join('C:\\', 'NNS','Backup','VmVare','LatticeExamplev3','LatticeExamplev3','lib','lattice.h')
+    if( len(sys.argv) != 2 ):
+        print( 'Usage: python LatticeAutoGen.py <Full path to header>' )
+        exit(-1)
+
+    #header_file = os.path.join('C:\\', 'NNS','Backup','VmVare','LatticeExamplev3','LatticeExamplev3','lib','lattice.h')
+    header_file = sys.argv[1]
+    if not os.path.exists(header_file):
+        print( 'File not found - ' + header_file )
+        print( 'Usage: python LatticeAutoGen.py <Full path to header>' )
+        exit(-1)
+
+    if not os.path.isabs( header_file ):
+        print( 'Path is not absolute.. ' )
+        print( 'Usage: python LatticeAutoGen.py <Full path to header>' )
+        exit(-1)
+
     header_dir = os.path.dirname( header_file );
+    header_name = os.path.splitext(os.path.basename(header_file))[0]
+
+    # TODO: Base lib path and name should be customized.
+    base_lib = os.path.join( header_dir, '..', 'build', 'lib', 'Debug', header_name + '_orig.dll')
+    base_lib = base_lib.replace('\\','\\\\')
 
     autogen_dir = os.path.join('.','lib')
     if not os.path.exists(autogen_dir):
         os.makedirs(autogen_dir)
-
-    header_name = os.path.splitext(os.path.basename(header_file))[0]
     output_file = os.path.join( autogen_dir,header_name + '.c' )
 
     shutil.copy( header_file, os.path.join( autogen_dir ) )
 
     funcs = parse_file( header_file )
 
-    generate_code( funcs, header_dir, header_name, output_file )
+    generate_code( funcs, header_dir, header_name, base_lib, output_file )
 
-    print ( funcs )
+    print( 'Done.' )
 
 
 if __name__ == "__main__":
