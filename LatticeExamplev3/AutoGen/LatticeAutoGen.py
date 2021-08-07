@@ -66,7 +66,7 @@ def gen_header( header_dir, header_name ):
     base_lib = os.path.join( header_dir, '..', 'build', 'lib', 'Debug', header_name + '_orig.dll')
     base_lib = base_lib.replace('\\','\\\\')
     str = ''
-    str += '//' + datetime.datetime.now().strftime("%H:%M:%S") + '\n'
+    #str += '//' + datetime.datetime.now().strftime("%H:%M:%S") + '\n'
     str += '#include <stdio.h>\n'
     str += '#include \"Windows.h\"\n'
     str += '#include \"' + header_name + '.h\"\n\n'
