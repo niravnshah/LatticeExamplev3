@@ -2,6 +2,12 @@
 
 ### AutoGen
 
+cd AutoGen
+
+python LatticeAutoGen.py
+
+cd ..
+
 
 ### Customization
 
