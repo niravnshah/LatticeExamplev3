@@ -76,14 +76,34 @@ FILE* logfile = NULL;
 
 void log( const char* str )
 {
-    fprintf( logfile, "%s\\n", str );
+    fprintf( logfile, "%s", str );
+}
+void log_longlong( const long long ll )
+{
+    fprintf( logfile, "%lld", ll );
+}
+void log_ulonglong( const unsigned long long ull )
+{
+    fprintf( logfile, "%llu", ull );
+}
+void log_longdouble( const long double ld )
+{
+    fprintf( logfile, "%Lf", ld );
+}
+void log_char( const char c )
+{
+    fprintf( logfile, "%c", c );
+}
+void log_ptr( const void* vp )
+{
+    fprintf( logfile, "%p", vp );
 }
 void log_start( const char* str )
 {
     if( logfile == NULL )
         logfile = fopen( "''' + log_name + '''", "a+" );
     if( str != NULL )
-        fprintf( logfile, "%s\\n", str );
+        fprintf( logfile, "\\n%s\\n", str );
 }
 void log_end( const char* str )
 {
@@ -126,14 +146,39 @@ def gen_func_header( func ):
 
 
 def gen_pre( func ):
+
+    ints = ['short','short int','signed short','signed short int','int','signed','signed int','long','long int','signed long','signed long int','long long','long long int','signed long long','signed long long int','size_t','int8_t','int16_t','int32_t','int64_t',]
+    uints = ['unsigned short','unsigned short int','unsigned','unsigned int','unsigned long','unsigned long int','unsigned long long','unsigned long long int','uint8_t,','uint16_t','uint32_t','uint64_t']
+    chars = ['char','signed char','unsigned char']
+    floats = ['float','double','long double']
+
     str = ''    
     str += '    log_start(\"Enter : ' + func['fun_name'] + '\");\n\n'
-    str += '    // This section is pre processing\n'
-    str += '    //log(\"Something in preprocessing\");\n'
+    str += '    // This section is pre processing\n\n'
+    if len(func['params']) > 0:
+        str += '    log(\"Params before function call:\");\n'
 
-    #for param in func['params']:
+    for param in func['params']:
+        str += '    log("\\n  ' + param['name'] + ' = ");\n'
+        
+        if param['type'][-1] == '*':
+            if param['pointertype'] == 'string':
+                log_fun = 'log'
+            #elif param['pointertype'] == 'array':
+            #    if param['arraysize'] != '':
 
-        #str += '    log(  ,1);'
+                #log_fun = 'log'
+            else :
+                log_fun = 'log_ptr'
+        elif param['type'] in ints:
+            log_fun = 'log_longlong'
+        elif param['type'] in uints:
+            log_fun = 'log_ulonglong'
+        elif param['type'] in chars:
+            log_fun = 'log_char'
+
+
+        str += '    ' + log_fun + '( ' + param['name'] + ' );\n'
 
     str += '\n'
     return str
@@ -141,7 +186,7 @@ def gen_pre( func ):
 
 def gen_post( func ):
     str = '    // This section is Post processing\n'
-    str += '    //log(\"Something in postprocessing\");\n\n'
+    str += '    log(\"\\nSomething in postprocessing\\n\");\n\n'
     str += '    log_end(\"Exit  : ' + func['fun_name'] + '\");\n'
     return str
 
