@@ -4,12 +4,7 @@ from yaml.loader import SafeLoader
 def main():
     AutoGen()
 
-def parse_file( file ):
-    print( '\nParsing the file.. ' + file )
-    fin = open(file, "r")
-
-    fullfile = fin.read()
-    fin.close()
+def remove_comments( fullfile ):
     fullfile = re.sub(r"([^/]*)(//.*)", r"\1",  fullfile) # remove single line comments
     
     # remove multiline comments
@@ -18,6 +13,17 @@ def parse_file( file ):
         match = re.match(r"(.*?)/\*(.*?)\*/(.*)", fullfile, flags=re.MULTILINE | re.DOTALL)
         if match:
             fullfile = re.sub(r"(.*?)/\*(.*?)\*/(.*)",r"\1\3", fullfile, flags=re.MULTILINE | re.DOTALL)
+
+    return fullfile
+
+def parse_file( file ):
+    print( '\nParsing the file.. ' + file )
+    fin = open(file, "r")
+
+    fullfile = fin.read()
+    fin.close()
+
+    fullfile = remove_comments( fullfile )
 
     lines = fullfile.split('\n')
 
@@ -98,7 +104,7 @@ void log_ptr( const void* vp )
 {
     fprintf( logfile, "%p", vp );
 }
-void log_longlong_arr( const long long* ll, int size )
+void log_longlong_arr( const long long* ll, long long size )
 {
     fprintf( logfile, "[ " );
     int i = 0;
@@ -108,7 +114,7 @@ void log_longlong_arr( const long long* ll, int size )
         fprintf( logfile, "%lld ", *(ll+i) );
     fprintf( logfile, "]" );
 }
-void log_ulonglong_arr( const unsigned long long* ull, int size )
+void log_ulonglong_arr( const unsigned long long* ull, long long size )
 {
     fprintf( logfile, "[ " );
     int i = 0;
@@ -118,7 +124,7 @@ void log_ulonglong_arr( const unsigned long long* ull, int size )
         fprintf( logfile, "%llu ", *(ull+i) );
     fprintf( logfile, "]" );
 }
-void log_longdouble_arr( const long double* ld, int size )
+void log_longdouble_arr( const long double* ld, long long size )
 {
     fprintf( logfile, "[ " );
     int i = 0;
@@ -128,7 +134,7 @@ void log_longdouble_arr( const long double* ld, int size )
         fprintf( logfile, "%LF ", *(ld+i) );
     fprintf( logfile, "]" );
 }
-void log_char_arr( const char* c, int size )
+void log_char_arr( const char* c, long long size )
 {
     fprintf( logfile, "[ " );
     int i = 0;
@@ -138,7 +144,7 @@ void log_char_arr( const char* c, int size )
         fprintf( logfile, "%c ", *(c+i) );
     fprintf( logfile, "]" );
 }
-void log_ptr_arr( const void* vp, int size, int stride )
+void log_ptr_arr( const void* vp, long long size, long long stride )
 {
     fprintf( logfile, "[ " );
     int i = 0;
@@ -183,7 +189,7 @@ void* get_base_library_symbol( const char* func_name )
     str += '\n'
     return str
 
-def gen_func_header( func, prepost, isref ):
+def gen_func_header( func, prepost ):
         #paramstr = []
         #for param in func['params']:
         #    paramstr.append( param['type'] + ' ' + param['name'] )
@@ -194,11 +200,11 @@ def gen_func_header( func, prepost, isref ):
         return_type = 'void '
         if prepost == '_post':
             if func['ret_type'] != 'void':
-                return_param = ', ' + func['ret_type'] + '& ret_value'
+                return_param = ', ' + func['ret_type'] + ' ret_value'
     else:
         return_type = func['ret_type'] + " "
 
-    str += return_type + func['fun_name'] + prepost + '( ' + ', '.join( [ (param['type'] + isref +' ' + param['name']) for param in func['params'] ] ) + return_param + ' )'
+    str += return_type + func['fun_name'] + prepost + '( ' + ', '.join( [ (param['type'] + ' ' + param['name']) for param in func['params'] ] ) + return_param + ' )'
     str += '\n{'
 
     return str;
@@ -269,7 +275,7 @@ def gen_param_logger( func ):
 
     return str
 
-def gen_pre( func ):
+def gen_pre( func, pre_tokens ):
 
     str = ''    
     str += '\n    log_start(\"Enter : ' + func['fun_name'] + '\");'
@@ -281,12 +287,13 @@ def gen_pre( func ):
         str += '\n    ' + func['fun_name'] + '_param_logger( ' + ', '.join( [ param['name'] for param in func['params'] ] ) + ' );'
 
     str += '\n\n    // This section is pre processing'
+    str += pre_tokens[func['fun_name']]
     #str += '\n    ' + func['fun_name'] + '_pre( ' + ', '.join( [ param['name'] for param in func['params'] ] ) + ' );'
     return str
 
-
-def gen_post( func ):
-    str = '\n\n    // This section is Post processing\n'
+def gen_post( func, post_tokens ):
+    str = '\n\n    // This section is Post processing'
+    str += post_tokens[func['fun_name']] + '\n'
 
     if len(func['params']) > 0:
         str += '\n    log(\"\\nParams after function call:\");'
@@ -320,9 +327,51 @@ def gen_return( func, prepost ):
 
     return str
 
+def parse_processing_file( file, prepost ):
+
+    fullfile = file.read()
+    fullfile = remove_comments( fullfile )
+    lines = fullfile.split('\n')
+    
+    tokens = {}
+    while( lines ):
+        fun_name = ''
+        section = ''
+        line = lines.pop(0)
+        if line.startswith( 'void' ):
+            match = re.match(r"void\s*(.+?)(_pre|_post)\s*\((.*?)\)", line)
+            if match:
+                fun_name = match.group(1)
+                section = ''
+                next_line = ''
+                while next_line != '}':
+                    next_line = lines.pop(0)
+                    #if next_line.startswith( '{' ):
+                    #    continue
+                    #if next_line.startswith( '}' ):
+                    #    continue
+                    if next_line.strip() == '':
+                        continue
+                    section = section + '\n' + next_line
+            #parts = section.split('\n')
+            #parts = [ ('    '+l) for l in parts]
+            section = '\n'.join([ ('    '+l) for l in section.split('\n')])
+            tokens[fun_name] = section
+
+    return tokens
+
 
 def generate_code( funcs, header_dir, header_file, base_lib, output_file ):
-    print( 'Generating code for.. ' + output_file)
+    pre_file = open(os.path.splitext(output_file)[0] + '_preproc.hpp','r')
+    post_file = open(os.path.splitext(output_file)[0] + '_postproc.hpp', 'r')
+
+    print( 'Reading pre processing file from ' + os.path.splitext(output_file)[0] + '_preproc.hpp' )
+    print( 'Reading post processing file from ' + os.path.splitext(output_file)[0] + '_postproc.hpp' )
+
+    pre_tokens = parse_processing_file( pre_file, '_pre' )
+    post_tokens = parse_processing_file( post_file, '_post' )
+
+    print( '\nGenerating code for.. ' + output_file)
     fout = open(output_file, "w+")
     
     str = gen_header( header_dir, header_file, base_lib )
@@ -331,35 +380,51 @@ def generate_code( funcs, header_dir, header_file, base_lib, output_file ):
     for func in funcs:
         str = ''
         str += gen_param_logger( func )
-        str += gen_func_header( func, '', '' )
-        str += gen_pre( func )
+        str += gen_func_header( func, '' )
+        str += gen_pre( func, pre_tokens )
         str += gen_call( func )
-        str += gen_post( func )
+        str += gen_post( func, post_tokens )
         str += gen_return( func, '' )
 
         fout.writelines( str )
 
+    pre_file.close()
+    post_file.close()
     fout.close()
 
-def generate_pre_post_code( funcs, header_dir, header_file, base_lib, output_file, prepost ):
+def generate_pre_post_code( funcs, header_dir, header_file, base_lib, output_file, prepost, force_gen_file ):
+
     output_file = os.path.splitext(output_file)[0] + prepost + 'proc.hpp'
-    print( 'Generating ' + prepost + ' processing code code for.. ' + header_file + ' -> ' + output_file )
-    fout = open(output_file, "w+")
+    old_filename = os.path.splitext(output_file)[0] + '_old.hpp'
     
-    #str = gen_header( header_dir, header_file, base_lib )
-    #fout.writelines( str )
+    if not os.path.exists( output_file ):
+        force_gen_file = True;
 
-    for func in funcs:
-        str = ''
-        str += gen_func_header( func, prepost ,'&' )
-        #str += gen_pre( func )
-        #str += gen_call( func )
-        #str += gen_post( func )
-        str += gen_return( func, prepost )
+    if force_gen_file:
+        if os.path.exists( old_filename ):
+            os.remove( old_filename )
 
-        fout.writelines( str )
+        if os.path.exists( output_file ):
+            os.rename( output_file, old_filename )
 
-    fout.close()
+        print( 'Generating ' + prepost + ' processing code code for.. ' + header_file + ' -> ' + output_file )
+        fout = open(output_file, "w+")
+    
+        fout.writelines("\n// This is a pre/post processing stubs file. The code block will get replaced as it is in the original file.")
+        fout.writelines("\n// The parameters are for reference so that correct code can be written easily.")
+        #str = gen_header( header_dir, header_file, base_lib )
+        #fout.writelines( str )
+
+        for func in funcs:
+            str = ''
+            str += gen_func_header( func, prepost )
+            str += '\n    // ' + prepost + ' processing of parameters can be done here.'
+            str += '\n\n}\n'
+
+            fout.writelines( str )
+
+        fout.close()
+
 
 class MyDumper(yaml.SafeDumper):
     # HACK: insert blank lines between top-level objects
@@ -371,23 +436,21 @@ class MyDumper(yaml.SafeDumper):
             super().write_line_break()
 
 
-def generate_func_params_yaml( funcs, autogen_dir, header_name, force_gen_yaml ):
+def generate_func_params_yaml( funcs, autogen_dir, header_name, force_gen ):
 
     old_yaml = os.path.join( autogen_dir, header_name + '_func_params_old.yaml' )
     yml = os.path.join( autogen_dir, header_name + '_func_params.yaml' )
     
     if not os.path.exists( yml ):
-        force_gen_yaml = True;
+        force_gen = True;
 
-    if force_gen_yaml:
+    if force_gen:
         if os.path.exists( old_yaml ):
             os.remove( old_yaml )
 
         if os.path.exists( yml ):
             os.rename( yml, old_yaml )
 
-        print( '\nGenerating paramter yaml at ' + yml ) 
-        print( 'Modify the yaml file and run the script without -generateyaml parameter to load the updated yaml' )
     
         fout = open( yml, "w+" )
 
@@ -432,32 +495,32 @@ def generate_func_params_yaml( funcs, autogen_dir, header_name, force_gen_yaml )
         fout.write( str )
         fout.write( yaml.dump(funcs, Dumper=MyDumper, sort_keys=False) )
         fout.close()
-        exit(0)
+        #exit(0)
     else:
         print( '\nReading yaml from ' + yml )
 
     with open( yml ) as f:
         data = yaml.load(f, Loader=SafeLoader)
 
-    return data
+    return data, force_gen
 
 
 def AutoGen():
 
     if( len(sys.argv) > 3 ):
-        print( 'Usage: python LatticeAutoGen.py <Full path to header> [-generateyaml]' )
+        print( 'Usage: python LatticeAutoGen.py <Full path to header> [-force]' )
         exit(-1)
 
     #header_file = os.path.join('C:\\', 'NNS','Backup','VmVare','LatticeExamplev3','LatticeExamplev3','lib','lattice.h')
     header_file = sys.argv[1]
     if not os.path.exists(header_file):
         print( 'File not found - ' + header_file )
-        print( 'Usage: python LatticeAutoGen.py <Full path to header> [-generateyaml]' )
+        print( 'Usage: python LatticeAutoGen.py <Full path to header> [-force]' )
         exit(-1)
 
     if not os.path.isabs( header_file ):
         print( 'Path is not absolute.. ' )
-        print( 'Usage: python LatticeAutoGen.py <Full path to header> [-generateyaml]' )
+        print( 'Usage: python LatticeAutoGen.py <Full path to header> [-force]' )
         exit(-1)
 
     header_dir = os.path.dirname( header_file );
@@ -476,22 +539,28 @@ def AutoGen():
 
     funcs = parse_file( header_file )
 
-    force_gen_yaml = 0
+    force_gen = False
     if ( len(sys.argv) == 3 ): 
-        force_gen_yaml = ( sys.argv[2] == '-generateyaml')
-        if not force_gen_yaml:
+        force_gen = ( sys.argv[2] == '-force')
+        if not force_gen:
             print( 'Invalid Arg..' )
-            print( 'Usage: python LatticeAutoGen.py <Full path to header> [-generateyaml]' )
+            print( 'Usage: python LatticeAutoGen.py <Full path to header> [-force]' )
             exit( -1 )
 
+    funcs, force_gen = generate_func_params_yaml( funcs, autogen_dir, header_name, force_gen )
 
-    funcs = generate_func_params_yaml( funcs, autogen_dir, header_name, force_gen_yaml )
+    if force_gen:
 
-    #parse_yaml( )
+        #parse_yaml( )
+
+        generate_pre_post_code( funcs, header_dir, header_name, base_lib, output_file, '_pre', force_gen )
+        generate_pre_post_code( funcs, header_dir, header_name, base_lib, output_file, '_post', force_gen )
+        print( '\nGenerated paramter yaml at ' + os.path.splitext(output_file)[0] + '_func_params.yaml' ) 
+        print( '\nGenerated pre processing code for.. ' + header_name + ' -> ' + os.path.splitext(output_file)[0] + '_preproc.hpp' )
+        print( '\nGenerated post processing code for.. ' + header_name + ' -> ' + os.path.splitext(output_file)[0] + '_postproc.hpp' )
+        print( 'Modify the yaml and necessary pre and post processing files and run the script without -force parameter to load the updated yaml' )
 
     generate_code( funcs, header_dir, header_name, base_lib, output_file )
-    generate_pre_post_code( funcs, header_dir, header_name, base_lib, output_file, '_pre' )
-    generate_pre_post_code( funcs, header_dir, header_name, base_lib, output_file, '_post' )
 
     print( 'Done.' )
 
