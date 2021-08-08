@@ -1,0 +1,127 @@
+
+Enter : simple
+
+Base function call : simple
+Exit  : simple
+
+Enter : single_int
+Params before function call:
+  a = 4
+Base function call : single_int
+Params after function call:
+  a = 9
+Exit  : single_int
+
+Enter : multiple_ints
+Params before function call:
+  a = 4
+  b = 14
+  c = 20
+Base function call : multiple_ints
+Params after function call:
+  a = 34
+  b = 14
+  c = 20
+Exit  : multiple_ints
+
+Enter : different_ints
+Params before function call:
+  s = 1048576
+  u = 256
+  c = u
+Base function call : different_ints
+Params after function call:
+  s = 1048576
+  u = 256
+  c = u
+Exit  : different_ints
+
+Enter : output_int
+Params before function call:
+  a = 100
+  b = 7
+  out = [ -3689348818177884160 ]
+Base function call : output_int
+Params after function call:
+  a = 10000
+  b = 49
+  out = [ -3689348818177884062 ]
+Exit  : output_int
+
+Enter : single_string
+Params before function call:
+  s = Hello, world!
+Base function call : single_string
+Params after function call:
+  s = Hello, world!
+Exit  : single_string
+
+Enter : multiple_strings
+Params before function call:
+  sa = Yabba
+  sb = Dabba
+  sc = Doo
+Base function call : multiple_strings
+Params after function call:
+  sa = Yabba
+  sb = Dabba
+  sc = Doo
+Exit  : multiple_strings
+
+Enter : modify_string
+Params before function call:
+  s = This is a short string.
+Base function call : modify_string
+Params after function call:
+  s = .GNIRTS TROHS A SI SIHT
+Exit  : modify_string
+
+Enter : single_buffer
+Params before function call:
+  buf = [ cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc, cc ]
+  len = 256
+Base function call : single_buffer
+Params after function call:
+  buf = [ dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd ]
+  len = 256
+Exit  : single_buffer
+
+Enter : modify_buffer
+Params before function call:
+  a = 37
+  buf = [ dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd, dd ]
+  len = 256
+Base function call : modify_buffer
+Params after function call:
+  a = 37
+  buf = [ 0, 3, 2, d, c, f, e, 9, 8, b, a, 15, 14, 17, 16, 11, 10, 13, 12, 1d, 1c, 1f, 1e, 19, 18, 1b, 1a, 65, 64, 67, 66, 61, 60, 63, 62, 6d, 6c, 6f, 6e, 69, 68, 6b, 6a, 75, 74, 77, 76, 71, 70, 73, 72, 7d, 7c, 7f, 7e, 79, 78, 7b, 7a, 45, 44, 47, 46, 41, 40, 43, 42, 4d, 4c, 4f, 4e, 49, 48, 4b, 4a, 55, 54, 57, 56, 51, 50, 53, 52, 5d, 5c, 5f, 5e, 59, 58, 5b, 5a, a5, a4, a7, a6, a1, a0, a3, a2, ad, ac, af, ae, a9, a8, ab, aa, b5, b4, b7, b6, b1, b0, b3, b2, bd, bc, bf, be, b9, b8, bb, ba, 85, 84, 87, 86, 81, 80, 83, 82, 8d, 8c, 8f, 8e, 89, 88, 8b, 8a, 95, 94, 97, 96, 91, 90, 93, 92, 9d, 9c, 9f, 9e, 99, 98, 9b, 9a, e5, e4, e7, e6, e1, e0, e3, e2, ed, ec, ef, ee, e9, e8, eb, ea, f5, f4, f7, f6, f1, f0, f3, f2, fd, fc, ff, fe, f9, f8, fb, fa, c5, c4, c7, c6, c1, c0, c3, c2, cd, cc, cf, ce, c9, c8, cb, ca, d5, d4, d7, d6, d1, d0, d3, d2, dd, dc, df, de, d9, d8, db, da, 25, 24, 27, 26, 21, 20, 23, 22, 2d, 2c, 2f, 2e, 29, 28, 2b, 2a, 35, 34, 37, 36, 31, 30, 33, 32, 3d, 3c, 3f, 3e, 39, 38, 3b, 3a, 5, 4, 7, 6 ]
+  len = 256
+Exit  : modify_buffer
+
+Enter : just_pointers
+Params before function call:
+  pa = 000000001234ABCD
+  pb = 0000000000000000
+Base function call : just_pointers
+Params after function call:
+  pa = 000000001234ABCD
+  pb = 0000000000000000
+Exit  : just_pointers
+
+Enter : kitchen_sink
+Params before function call:
+  a = 7
+  name = This is a small sample string.
+  out_name = This is a small sample string. Which has another string after it
+  buf = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, a, b, c, d, e, f, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 1a, 1b, 1c, 1d, 1e, 1f, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 2a, 2b, 2c, 2d, 2e, 2f, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 3a, 3b, 3c, 3d, 3e ]
+  out_buf = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, a, b, c, d, e, f, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 1a, 1b, 1c, 1d, 1e, 1f, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 2a, 2b, 2c, 2d, 2e, 2f, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 3a, 3b, 3c, 3d, 3e ]
+  len = 64
+Base function call : kitchen_sink
+Params after function call:
+  a = 7
+  name = This is a small sample string.
+  out_name = THIS IS A SMALL SAMPLE STRING. WHICH HAS ANOTHER STRING AFTER ITTHIS IS A SMALL SAMPLE STRING. WHICH HAS ANOTHER STRING AFTER IT
+  buf = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, a, b, c, d, e, f, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 1a, 1b, 1c, 1d, 1e, 1f, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 2a, 2b, 2c, 2d, 2e, 2f, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 3a, 3b, 3c, 3d, 3e ]
+  out_buf = [ 7, 8, 9, a, b, c, d, e, f, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 1a, 1b, 1c, 1d, 1e, 1f, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 2a, 2b, 2c, 2d, 2e, 2f, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 3a, 3b, 3c, 3d, 3e, 3f, 40, 41, 42, 43, 44, 45 ]
+  len = 64
+Exit  : kitchen_sink
