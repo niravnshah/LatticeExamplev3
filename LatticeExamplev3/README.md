@@ -80,3 +80,25 @@ DLLEXPORT declarations are added in the lattice.h file to have proper function p
 
 - Any included file having relative path may not work
 
+
+
+### Examples
+
+- Reverse all strings before calling the functions
+    Done in modify_string
+
+- Randomly return an error even though the function succeeded
+    Done in just_pointers
+
+- XOR input and output buffers against some constant value
+    input buffer modification done in single_buffer
+    output buffer modification done in modify buffer
+    
+- Double all strings (append another copy of the string at the end of each string)
+    Done in kitchen_sink
+    
+- Search all buffers for certain patterns (byte sequences that look look like as pointers, integers, or strings) and log them
+    Done in single_buffer
+    
+- Perform search-and-replace on strings
+    Done in kitchen_sink
