@@ -1,5 +1,5 @@
-import os, sys, re, ntpath, shutil,datetime
-
+import os, sys, re, ntpath, shutil,datetime, yaml
+from yaml.loader import SafeLoader
 
 def main():
     AutoGen()
@@ -49,10 +49,10 @@ def parse_file( file ):
                     str[-1] = str[-1][1:]
                     str[-2] = str[-2] + '*'
 
-                newparams.append( { 'name' : str[-1], 'type' : ' '.join( str[0:-1] ) } )
+                newparams.append( { 'name' : str[-1], 'type' : ' '.join( str[0:-1] ), 'inout': '', 'pointertype': '', 'arraysize': '' } )
 
-            funcs.append({'ret_type' : match.group(1).replace("\n",""),
-                          'fun_name' : match.group(2).replace("\n",""), 
+            funcs.append({'fun_name' : match.group(2).replace("\n",""), 
+                          'ret_type' : match.group(1).replace("\n",""),
                           'params' : newparams } )
 
             # TODO: extract parameter names to determine if parameter name is given in the definition or not
@@ -74,8 +74,10 @@ def gen_header( header_dir, header_name, base_lib ):
     str += '''
 FILE* logfile = NULL;
 
-void log( const char* str )
+void log( const char* str, int indent = 0 )
 {
+    for( int i = 0; i < indent; i++ )
+        fprintf("    ");
     fprintf( logfile, "%s\\n", str );
 }
 void log_function_enter( const char* func_name )
@@ -139,6 +141,10 @@ def gen_pre( func ):
     
     str += '    log_start(\"Enter : ' + func['fun_name'] + '\\n\");\n'
 
+    #for param in func['params']:
+
+        #str += '    log(  ,1);'
+
     str += '\n'
     return str
 
@@ -194,6 +200,91 @@ def generate_code( funcs, header_dir, header_file, base_lib, output_file ):
 
     fout.close()
 
+class MyDumper(yaml.SafeDumper):
+    # HACK: insert blank lines between top-level objects
+    # inspired by https://stackoverflow.com/a/44284819/3786245
+    def write_line_break(self, data=None):
+        super().write_line_break(data)
+
+        if len(self.indents) == 1:
+            super().write_line_break()
+
+
+def generate_func_params_yaml( funcs, autogen_dir, header_name, force_gen_yaml ):
+
+    old_yaml = os.path.join( autogen_dir, header_name + 'func_params_old.yaml' )
+    yml = os.path.join( autogen_dir, header_name + 'func_params.yaml' )
+    
+    if not os.path.exists( yml ):
+        force_gen_yaml = True;
+
+    if force_gen_yaml:
+        if os.path.exists( old_yaml ):
+            os.remove( old_yaml )
+
+        if os.path.exists( yml ):
+            os.rename( yml, old_yaml )
+
+        print( 'Generating paramter yaml at ' + yml ) 
+        print( 'Modify the yaml file and run the script without -generateyaml parameter to load the updated yaml' )
+    
+        fout = open( yml, "w+" )
+
+        str = ''
+        str += '''
+# Syntax:
+#
+# "functions:" [optional]
+#     List of functions
+#
+#     "fun_name: <name>"
+#         Name of the function
+#
+#     "ret_type: <name>"
+#         Name of the function#
+#
+#     "params:"
+#         List of params
+#
+#         "name: <parameter name>"
+#
+#         "type: <datatype>"
+#
+#         "inout: <in/out/inout>"
+#             if the parameter is in or out or inout param. default inout
+#
+#         "pointertype: <array/string/pointer>"
+#             if the param is a pointer type, then is it array of that type? Default array. char* defaults to string.
+#
+#         "arraysize: <arraysize parameter name>"
+#             if the param is a pointer type and it is an array of that type; which parameter denotes the size of that array. this parameter is a must for pointertype = array else the parameter will not be logged
+#
+#==========================================================================
+
+'''
+        fout.write( str )
+        #str += 'functions:\n\n'
+
+        #for func in funcs:
+        #    str += ' - name: ' + func['fun_name'] + '\n'
+        #    str += '   params:\n'
+        #    for param in func['params']:
+        #        str += '   - name: ' + param['name'] + '\n'
+        #        str += '     datatype: ' + param['type'] + '\n'
+        #        str += '     inout: ' + '\n'
+        #        str += '     pointertype: ' + '\n'
+        #        str += '     arraysize: ' + '\n'
+        #    str += '\n#--------------------------------------------------------------------------\n'
+
+        fout.write( yaml.dump(funcs, Dumper=MyDumper, sort_keys=False) )
+
+        fout.close()
+
+    with open( yml ) as f:
+        data = yaml.load(f, Loader=SafeLoader)
+
+    return data
+
 
 def AutoGen():
 
@@ -228,6 +319,12 @@ def AutoGen():
     shutil.copy( header_file, os.path.join( autogen_dir ) )
 
     funcs = parse_file( header_file )
+
+    force_gen_yaml = False
+
+    funcs = generate_func_params_yaml( funcs, autogen_dir, header_name, force_gen_yaml )
+
+    #parse_yaml( )
 
     generate_code( funcs, header_dir, header_name, base_lib, output_file )
 
