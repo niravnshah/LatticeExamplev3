@@ -98,7 +98,7 @@ DLLEXPORT declarations are added in the lattice.h file to have proper function p
     Done in kitchen_sink
     
 - Search all buffers for certain patterns (byte sequences that look look like as pointers, integers, or strings) and log them
-    Done in single_buffer
+    Done in modify_buffer
     
 - Perform search-and-replace on strings
     Done in kitchen_sink
