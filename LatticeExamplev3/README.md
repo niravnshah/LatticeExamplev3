@@ -26,7 +26,7 @@ After appropriate yaml and hpp modification, run the script without -force param
 
 cd AutoGen
 
-python LatticeAutoGen.py &lt;Full path to the header file&gt
+python LatticeAutoGen.py &lt;Full path to the header file&gt;
 
 cd ..
 
