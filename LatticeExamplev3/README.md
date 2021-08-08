@@ -47,6 +47,14 @@ cmake --build .
 .\bin\Debug\latticeexample.exe
 
 
+### CmakeLists changes
+
+The existing lattice lib is converted to SHARED lib so that it can be loaded dynamically
+The name of the lib is also changed to lattice_orig so that the interpose layer lib can be generated with lattice name and be linked statically to the latticeexample project without any change to it.
+The interpose lib is a static lib with name as lattice.
+
+DLLEXPORT declarations are added in the lattice.h file to have proper function pointers exposed for windows DLL.
+
 ### Prerequisites
 
 - Python 3.9
