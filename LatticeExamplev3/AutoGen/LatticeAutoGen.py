@@ -165,8 +165,7 @@ void log_end( const char* str )
         logfile = NULL;
     }
 }
-
-    '''
+'''
 
     str += '''
 void* get_base_library_symbol( const char* func_name )
@@ -179,109 +178,145 @@ void* get_base_library_symbol( const char* func_name )
     if( lib )
         pfnptr = GetProcAddress( lib, func_name );
     return pfnptr;
-}'''
-    str += '\n\n'
+}
+'''
+    str += '\n'
     return str
 
-def gen_func_header( func ):
+def gen_func_header( func, prepost, isref ):
         #paramstr = []
         #for param in func['params']:
         #    paramstr.append( param['type'] + ' ' + param['name'] )
         #str = func['ret_type'] + " " + func['fun_name'] + '( ' + ', '.join( paramstr ) + ' )'
-    str = ''
-    str += func['ret_type'] + " " + func['fun_name'] + '( ' + ', '.join( [ (param['type'] + ' ' + param['name']) for param in func['params'] ] ) + ' )'
-    str += '\n{\n'
+    str = '\n'
+    return_param = ''
+    if prepost != '':
+        return_type = 'void '
+        if prepost == '_post':
+            if func['ret_type'] != 'void':
+                return_param = ', ' + func['ret_type'] + '& ret_value'
+    else:
+        return_type = func['ret_type'] + " "
+
+    str += return_type + func['fun_name'] + prepost + '( ' + ', '.join( [ (param['type'] + isref +' ' + param['name']) for param in func['params'] ] ) + return_param + ' )'
+    str += '\n{'
 
     return str;
 
 
-def gen_pre( func ):
-
+def param_log( param ):
     ints = ['short','short int','signed short','signed short int','int','signed','signed int','long','long int','signed long','signed long int','long long','long long int','signed long long','signed long long int','size_t','int8_t','int16_t','int32_t','int64_t',]
     uints = ['unsigned short','unsigned short int','unsigned','unsigned int','unsigned long','unsigned long int','unsigned long long','unsigned long long int','uint8_t,','uint16_t','uint32_t','uint64_t']
     chars = ['char','signed char','unsigned char']
     floats = ['float','double','long double']
 
-    str = ''    
-    str += '    log_start(\"Enter : ' + func['fun_name'] + '\");\n\n'
-    str += '    // This section is pre processing\n\n'
-    if len(func['params']) > 0:
-        str += '    log(\"Params before function call:\");\n'
-
-    for param in func['params']:
-        str += '    log("\\n  ' + param['name'] + ' = ");\n'
+    str = '\n    log("\\n  ' + param['name'] + ' = ");'
         
-        pointertype = 0
-        arraysizeparam = ''
-        param_type = param['type']
-        param_type = param_type.lower().replace('const','').strip()
-        if param_type[-1] == '*':
-            pointertype = 1
-            param_type = param_type.replace('*','')
+    pointertype = 0
+    arraysizeparam = ''
+    param_type = param['type']
+    param_type = param_type.lower().replace('const','').strip()
+    if param_type[-1] == '*':
+        pointertype = 1
+        param_type = param_type.replace('*','')
+        log_fun = 'log_ptr'
+
+        
+
+    if param_type in ints:
+        log_fun = 'log_longlong'
+    elif param_type in uints:
+        log_fun = 'log_ulonglong'
+    elif param_type in floats:
+        log_fun = 'log_longdouble'
+    elif param_type in chars:
+        if param['pointertype'] == 'string':
+            log_fun = 'log'
+            pointertype = 0
+        else:
+            log_fun = 'log_char'
+
+    if pointertype:
+        if param['arraysizeparam'] != '':
+            log_fun += '_arr'
+            arraysizeparam = param['arraysizeparam']
+        elif param['pointertype'] == 'value':
+            log_fun += '_arr'
+            arraysizeparam = '1'
+        else:
             log_fun = 'log_ptr'
 
-        
 
-        if param_type in ints:
-            log_fun = 'log_longlong'
-        elif param_type in uints:
-            log_fun = 'log_ulonglong'
-        elif param_type in floats:
-            log_fun = 'log_longdouble'
-        elif param_type in chars:
-            if param['pointertype'] == 'string':
-                log_fun = 'log'
-                pointertype = 0
-            else:
-                log_fun = 'log_char'
+    str += '\n    ' + log_fun + '( ' + param['name']
+    if arraysizeparam != '':
+        str += ', ' + arraysizeparam
+    if log_fun == 'log_ptr_arr':
+        str += ' , ' + param['arrayelementstride']
+    
+    str += ' );'
 
-        if pointertype:
-            if param['arraysizeparam'] != '':
-                log_fun += '_arr'
-                arraysizeparam = param['arraysizeparam']
-            elif param['pointertype'] == 'value':
-                log_fun += '_arr'
-                arraysizeparam = '1'
-            else:
-                log_fun = 'log_ptr'
+    return str
 
+def gen_param_logger( func ):
+    str = ''
+    if len(func['params']) > 0:
+        str += '\nvoid ' + func['fun_name'] + '_param_logger' + '( ' + ', '.join( [ (param['type'] + ' ' + param['name']) for param in func['params'] ] ) + ' )'
+        str += '\n{'
+        for param in func['params']:
+            str += param_log( param )
+        str += '\n    return;'
+        str += '\n}\n'
 
-        str += '    ' + log_fun + '( ' + param['name']
-        if arraysizeparam != '':
-            str += ', ' + arraysizeparam
-        if log_fun == 'log_ptr_arr':
-            str += ' , ' + param['arrayelementstride']
-        str += ' );\n'
+    return str
 
-    str += '\n'
+def gen_pre( func ):
+
+    str = ''    
+    str += '\n    log_start(\"Enter : ' + func['fun_name'] + '\");'
+
+    if len(func['params']) > 0:
+        str += '\n\n    log(\"Params before function call:\");'
+    #for param in func['params']:
+    #    str += param_log( param )
+        str += '\n    ' + func['fun_name'] + '_param_logger( ' + ', '.join( [ param['name'] for param in func['params'] ] ) + ' );'
+
+    str += '\n\n    // This section is pre processing'
+    #str += '\n    ' + func['fun_name'] + '_pre( ' + ', '.join( [ param['name'] for param in func['params'] ] ) + ' );'
     return str
 
 
 def gen_post( func ):
-    str = '    // This section is Post processing\n\n'
-    str += '    log_end(\"\\nExit  : ' + func['fun_name'] + '\");\n'
+    str = '\n\n    // This section is Post processing\n'
+
+    if len(func['params']) > 0:
+        str += '\n    log(\"\\nParams after function call:\");'
+    #for param in func['params']:
+    #    str += param_log( param )
+        str += '\n    ' + func['fun_name'] + '_param_logger( ' + ', '.join( [ param['name'] for param in func['params'] ] ) + ' );'
+
+    str += '\n    log_end(\"\\nExit  : ' + func['fun_name'] + '\");'
     return str
 
 
 def gen_call( func ):
-    str = ''
-    str += '    typedef ' + func['ret_type'] + ' ( *pfn_' + func['fun_name'] + ' ) ( ' + ', '.join( [ (param['type']) for param in func['params'] ] ) + ' );\n'
-    str += '    pfn_' + func['fun_name'] + ' base_function = ( pfn_' + func['fun_name'] + ' ) get_base_library_symbol( \"' + func['fun_name'] + '\" );\n'
-    str += '    '
+    str = '\n\n    log( "\\nBase function call : ' + func['fun_name'] + '" );'
+    str += '\n    typedef ' + func['ret_type'] + ' ( *pfn_' + func['fun_name'] + ' ) ( ' + ', '.join( [ (param['type']) for param in func['params'] ] ) + ' );'
+    str += '\n    pfn_' + func['fun_name'] + ' base_function = ( pfn_' + func['fun_name'] + ' ) get_base_library_symbol( \"' + func['fun_name'] + '\" );'
+    str += '\n    '
     if func['ret_type'] != 'void':
         str += func['ret_type'] + ' ret_val = '
-    str += 'base_function( ' + ', '.join( [ param['name'] for param in func['params'] ] ) + ' );\n'
+    str += 'base_function( ' + ', '.join( [ param['name'] for param in func['params'] ] ) + ' );'
 
-    str += '\n'
     return str
 
 
-def gen_return( func ):
-    str = '    return'
-    if func['ret_type'] != 'void':
-        str += ' ret_val'
-    str+= ';\n'
-    str += '}\n'
+def gen_return( func, prepost ):
+    str = '\n    return'
+    if prepost == '':
+        if func['ret_type'] != 'void':
+            str += ' ret_val'
+    str+= ';'
+    str += '\n}\n'
 
     return str
 
@@ -295,11 +330,32 @@ def generate_code( funcs, header_dir, header_file, base_lib, output_file ):
 
     for func in funcs:
         str = ''
-        str += gen_func_header( func )
+        str += gen_param_logger( func )
+        str += gen_func_header( func, '', '' )
         str += gen_pre( func )
         str += gen_call( func )
         str += gen_post( func )
-        str += gen_return( func )
+        str += gen_return( func, '' )
+
+        fout.writelines( str )
+
+    fout.close()
+
+def generate_pre_post_code( funcs, header_dir, header_file, base_lib, output_file, prepost ):
+    output_file = os.path.splitext(output_file)[0] + prepost + 'proc.hpp'
+    print( 'Generating ' + prepost + ' processing code code for.. ' + header_file + ' -> ' + output_file )
+    fout = open(output_file, "w+")
+    
+    #str = gen_header( header_dir, header_file, base_lib )
+    #fout.writelines( str )
+
+    for func in funcs:
+        str = ''
+        str += gen_func_header( func, prepost ,'&' )
+        #str += gen_pre( func )
+        #str += gen_call( func )
+        #str += gen_post( func )
+        str += gen_return( func, prepost )
 
         fout.writelines( str )
 
@@ -434,6 +490,8 @@ def AutoGen():
     #parse_yaml( )
 
     generate_code( funcs, header_dir, header_name, base_lib, output_file )
+    generate_pre_post_code( funcs, header_dir, header_name, base_lib, output_file, '_pre' )
+    generate_pre_post_code( funcs, header_dir, header_name, base_lib, output_file, '_post' )
 
     print( 'Done.' )
 
