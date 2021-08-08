@@ -1,4 +1,6 @@
 /AutoGen/lib/lattice.c
 /AutoGen/lib/lattice.h
+/AutoGen/lib/lattice_postproc.hpp
+/AutoGen/lib/lattice_preproc.hpp
 .vs/
 build/
