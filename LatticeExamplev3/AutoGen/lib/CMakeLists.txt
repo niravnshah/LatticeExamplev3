@@ -4,7 +4,7 @@ target_include_directories(lattice INTERFACE
     $<INSTALL_INTERFACE:include>
 )
 set_target_properties(lattice PROPERTIES PUBLIC_HEADER lattice.h)
-add_compile_definitions(DLL_IMPORT)
+add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 install(TARGETS lattice
     RUNTIME DESTINATION bin
     LIBRARY DESTINATION lib
