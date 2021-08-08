@@ -3,22 +3,32 @@
 
 cd AutoGen
 
-python LatticeAutoGen.py <Full path to the header file> [-generateyaml]
+python LatticeAutoGen.py <Full path to the header file>
 
 cd ..
 
 
 ### Customization
 
-On the first run of the script, the script generates the lattice_func_params.yaml under AutoGen/lib folder.
+On the first run of the script, the script generates the lattice_func_params.yaml, lattice_preproc.hpp and lattice_postproc.hpp under AutoGen/lib folder.
 
 This yaml file should be modified to provide more details about various function parameter. esp, providing specialization of pointer type. More detail is provided in the existing yaml file.
+This hpp files should be modified to provide pre and post processing work or any function. If nothing to be done, then those functions can be left blank.
 
-On every modification of the lattice.h header, the python script should be run with -generateyaml option to generate new yaml.
+On every modification of the lattice.h header, the python script should be run with *-force* option to generate new yaml and hpp files.
 
-The existing yaml will be renamed as lattice_func_params_old.yaml at the same location for reference.
+The existing yaml and hpp will be renamed as *_old. at the same location for reference.
 
-After appropriate yaml modification, run the script without -generateyaml parameter to generate the interpose implementation.
+After appropriate yaml and hpp modification, run the script without -force parameter to generate the interpose implementation.
+
+
+### AutoGen Again
+
+cd AutoGen
+
+python LatticeAutoGen.py <Full path to the header file>
+
+cd ..
 
 
 ### Build
@@ -32,7 +42,20 @@ cmake ..
 cmake --build .
 
 
+### Run
+
+.\bin\Debug\latticeexample.exe
+
+
+### Prerequisites
+
+- Python 3.9
+- Cmake
+
+
 ### Assumptions
+
+- The solution is tested to be working with Windows and python 3.9
 
 - header file contains only function declarations and not function definitions.
 
