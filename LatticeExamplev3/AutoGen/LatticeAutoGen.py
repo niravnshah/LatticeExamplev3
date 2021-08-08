@@ -74,7 +74,9 @@ def gen_header( header_dir, header_name, base_lib ):
     str = ''
     str += '//' + datetime.datetime.now().strftime("%H:%M:%S") + '\n'
     str += '#include <stdio.h>\n'
-    str += '#include \"Windows.h\"\n'
+    str += '#include <Windows.h>\n'
+    str += '#include <time.h>\n'
+    str += '#include <stdlib.h>\n'
     str += '#include \"' + header_name + '.h\"\n\n'
 
     str += '''
@@ -200,7 +202,7 @@ def gen_func_header( func, prepost ):
         return_type = 'void '
         if prepost == '_post':
             if func['ret_type'] != 'void':
-                return_param = ', ' + func['ret_type'] + ' ret_value'
+                return_param = ', ' + func['ret_type'] + ' ret_val'
     else:
         return_type = func['ret_type'] + " "
 
