@@ -80,7 +80,7 @@ void log( const char* str )
 }
 void log_start( const char* str )
 {
-    if( logfile != NULL )
+    if( logfile == NULL )
         logfile = fopen( "''' + log_name + '''", "a+" );
     if( str != NULL )
         fprintf( logfile, "%s\\n", str );
@@ -90,7 +90,10 @@ void log_end( const char* str )
     if( str != NULL )
         fprintf( logfile, "%s\\n", str );
     if( logfile != NULL )
+    {
         fclose( logfile );
+        logfile = NULL;
+    }
 }
 
     '''
@@ -124,7 +127,7 @@ def gen_func_header( func ):
 
 def gen_pre( func ):
     str = ''    
-    str += '    //log_start(\"Enter : ' + func['fun_name'] + '\");\n\n'
+    str += '    log_start(\"Enter : ' + func['fun_name'] + '\");\n\n'
     str += '    // This section is pre processing\n'
     str += '    //log(\"Something in preprocessing\");\n'
 
@@ -139,7 +142,7 @@ def gen_pre( func ):
 def gen_post( func ):
     str = '    // This section is Post processing\n'
     str += '    //log(\"Something in postprocessing\");\n\n'
-    str += '    //log_end(\"Exit  : ' + func['fun_name'] + '\");\n'
+    str += '    log_end(\"Exit  : ' + func['fun_name'] + '\");\n'
     return str
 
 
