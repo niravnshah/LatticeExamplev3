@@ -5,7 +5,7 @@ def main():
     AutoGen()
 
 def parse_file( file ):
-    print( 'Parsing the file.. ' + file )
+    print( '\nParsing the file.. ' + file )
     fin = open(file, "r")
 
     fullfile = fin.read()
@@ -49,7 +49,7 @@ def parse_file( file ):
                     str[-1] = str[-1][1:]
                     str[-2] = str[-2] + '*'
 
-                newparams.append( { 'name' : str[-1], 'type' : ' '.join( str[0:-1] ), 'inout': '', 'pointertype': '', 'arraysize': '' } )
+                newparams.append( { 'name' : str[-1], 'type' : ' '.join( str[0:-1] ), 'inout': '', 'pointertype': '', 'arraysizeparam': '', 'arrayelementstride': '' } )
 
             funcs.append({'fun_name' : match.group(2).replace("\n",""), 
                           'ret_type' : match.group(1).replace("\n",""),
@@ -97,6 +97,56 @@ void log_char( const char c )
 void log_ptr( const void* vp )
 {
     fprintf( logfile, "%p", vp );
+}
+void log_longlong_arr( const long long* ll, int size )
+{
+    fprintf( logfile, "[ " );
+    int i = 0;
+    for( ; i < size-2; i++ )
+        fprintf( logfile, "%lld, ", *(ll+i) );
+    if( size > 0 )
+        fprintf( logfile, "%lld ", *(ll+i) );
+    fprintf( logfile, "]" );
+}
+void log_ulonglong_arr( const unsigned long long* ull, int size )
+{
+    fprintf( logfile, "[ " );
+    int i = 0;
+    for( ; i < size-2; i++ )
+        fprintf( logfile, "%llu, ", *(ull+i) );
+    if( size > 0 )
+        fprintf( logfile, "%llu ", *(ull+i) );
+    fprintf( logfile, "]" );
+}
+void log_longdouble_arr( const long double* ld, int size )
+{
+    fprintf( logfile, "[ " );
+    int i = 0;
+    for( ; i < size-2; i++ )
+        fprintf( logfile, "%LF, ", *(ld+i) );
+    if( size > 0 )
+        fprintf( logfile, "%LF ", *(ld+i) );
+    fprintf( logfile, "]" );
+}
+void log_char_arr( const char* c, int size )
+{
+    fprintf( logfile, "[ " );
+    int i = 0;
+    for( ; i < size-2; i++ )
+        fprintf( logfile, "%c, ", *(c+i) );
+    if( size > 0 )
+        fprintf( logfile, "%c ", *(c+i) );
+    fprintf( logfile, "]" );
+}
+void log_ptr_arr( const void* vp, int size, int stride )
+{
+    fprintf( logfile, "[ " );
+    int i = 0;
+    for( ; i < size-2; i++ )
+        fprintf( logfile, "%x, ", *((byte*)vp+i) );
+    if( size > 0 )
+        fprintf( logfile, "%x ", *((byte*)vp+i) );
+    fprintf( logfile, "]" );
 }
 void log_start( const char* str )
 {
@@ -161,33 +211,55 @@ def gen_pre( func ):
     for param in func['params']:
         str += '    log("\\n  ' + param['name'] + ' = ");\n'
         
-        if param['type'][-1] == '*':
+        pointertype = 0
+        arraysizeparam = ''
+        param_type = param['type']
+        param_type = param_type.lower().replace('const','').strip()
+        if param_type[-1] == '*':
+            pointertype = 1
+            param_type = param_type.replace('*','')
+            log_fun = 'log_ptr'
+
+        
+
+        if param_type in ints:
+            log_fun = 'log_longlong'
+        elif param_type in uints:
+            log_fun = 'log_ulonglong'
+        elif param_type in floats:
+            log_fun = 'log_longdouble'
+        elif param_type in chars:
             if param['pointertype'] == 'string':
                 log_fun = 'log'
-            #elif param['pointertype'] == 'array':
-            #    if param['arraysize'] != '':
+                pointertype = 0
+            else:
+                log_fun = 'log_char'
 
-                #log_fun = 'log'
-            else :
+        if pointertype:
+            if param['arraysizeparam'] != '':
+                log_fun += '_arr'
+                arraysizeparam = param['arraysizeparam']
+            elif param['pointertype'] == 'value':
+                log_fun += '_arr'
+                arraysizeparam = '1'
+            else:
                 log_fun = 'log_ptr'
-        elif param['type'] in ints:
-            log_fun = 'log_longlong'
-        elif param['type'] in uints:
-            log_fun = 'log_ulonglong'
-        elif param['type'] in chars:
-            log_fun = 'log_char'
 
 
-        str += '    ' + log_fun + '( ' + param['name'] + ' );\n'
+        str += '    ' + log_fun + '( ' + param['name']
+        if arraysizeparam != '':
+            str += ', ' + arraysizeparam
+        if log_fun == 'log_ptr_arr':
+            str += ' , ' + param['arrayelementstride']
+        str += ' );\n'
 
     str += '\n'
     return str
 
 
 def gen_post( func ):
-    str = '    // This section is Post processing\n'
-    str += '    log(\"\\nSomething in postprocessing\\n\");\n\n'
-    str += '    log_end(\"Exit  : ' + func['fun_name'] + '\");\n'
+    str = '    // This section is Post processing\n\n'
+    str += '    log_end(\"\\nExit  : ' + func['fun_name'] + '\");\n'
     return str
 
 
@@ -284,33 +356,27 @@ def generate_func_params_yaml( funcs, autogen_dir, header_name, force_gen_yaml )
 #         "type: <datatype>"
 #
 #         "inout: <in/out/inout>"
-#             if the parameter is in or out or inout param. default inout
+#             if the parameter is in or out or inout param.
 #
-#         "pointertype: <array/string/pointer>"
-#             if the param is a pointer type, then is it array of that type? Default array. char* defaults to string.
+#         "pointertype: <array/string/value/pointer>"
+#             string - if a char* is a string
+#             array - if the pointer points to the first element of an array. arraysizeparam should be populated for array to get logged.
+#             value - if the pointer is used to pass a value. Logger will show the value at the address.
+#             pointer - just an address. Logger will log the address.
 #
-#         "arraysize: <arraysize parameter name>"
+#         "arraysizeparam: <arraysize parameter name>"
 #             if the param is a pointer type and it is an array of that type; which parameter denotes the size of that array. this parameter is a must for pointertype = array else the parameter will not be logged
+#
+#         "arrayelementstride: <No of bytes of each of the elements of the array>"
+#             if the param is a void pointer type and it is an array of that type; this paramenter tells the number of bytes of each of the element of the array. Hex values will be logged.
 #
 #==========================================================================
 
 '''
         fout.write( str )
-        #str += 'functions:\n\n'
-
-        #for func in funcs:
-        #    str += ' - name: ' + func['fun_name'] + '\n'
-        #    str += '   params:\n'
-        #    for param in func['params']:
-        #        str += '   - name: ' + param['name'] + '\n'
-        #        str += '     datatype: ' + param['type'] + '\n'
-        #        str += '     inout: ' + '\n'
-        #        str += '     pointertype: ' + '\n'
-        #        str += '     arraysize: ' + '\n'
-        #    str += '\n#--------------------------------------------------------------------------\n'
-
         fout.write( yaml.dump(funcs, Dumper=MyDumper, sort_keys=False) )
         fout.close()
+        exit(0)
     else:
         print( '\nReading yaml from ' + yml )
 
@@ -322,20 +388,20 @@ def generate_func_params_yaml( funcs, autogen_dir, header_name, force_gen_yaml )
 
 def AutoGen():
 
-    if( len(sys.argv) != 2 ):
-        print( 'Usage: python LatticeAutoGen.py <Full path to header>' )
+    if( len(sys.argv) > 3 ):
+        print( 'Usage: python LatticeAutoGen.py <Full path to header> [-generateyaml]' )
         exit(-1)
 
     #header_file = os.path.join('C:\\', 'NNS','Backup','VmVare','LatticeExamplev3','LatticeExamplev3','lib','lattice.h')
     header_file = sys.argv[1]
     if not os.path.exists(header_file):
         print( 'File not found - ' + header_file )
-        print( 'Usage: python LatticeAutoGen.py <Full path to header>' )
+        print( 'Usage: python LatticeAutoGen.py <Full path to header> [-generateyaml]' )
         exit(-1)
 
     if not os.path.isabs( header_file ):
         print( 'Path is not absolute.. ' )
-        print( 'Usage: python LatticeAutoGen.py <Full path to header>' )
+        print( 'Usage: python LatticeAutoGen.py <Full path to header> [-generateyaml]' )
         exit(-1)
 
     header_dir = os.path.dirname( header_file );
@@ -354,7 +420,14 @@ def AutoGen():
 
     funcs = parse_file( header_file )
 
-    force_gen_yaml = True
+    force_gen_yaml = 0
+    if ( len(sys.argv) == 3 ): 
+        force_gen_yaml = ( sys.argv[2] == '-generateyaml')
+        if not force_gen_yaml:
+            print( 'Invalid Arg..' )
+            print( 'Usage: python LatticeAutoGen.py <Full path to header> [-generateyaml]' )
+            exit( -1 )
+
 
     funcs = generate_func_params_yaml( funcs, autogen_dir, header_name, force_gen_yaml )
 

@@ -1,0 +1,251 @@
+
+# Syntax:
+#
+# "functions:" [optional]
+#     List of functions
+#
+#     "fun_name: <name>"
+#         Name of the function
+#
+#     "ret_type: <name>"
+#         Name of the function#
+#
+#     "params:"
+#         List of params
+#
+#         "name: <parameter name>"
+#
+#         "type: <datatype>"
+#
+#         "inout: <in/out/inout>"
+#             if the parameter is in or out or inout param.
+#
+#         "pointertype: <array/string/value/pointer>"
+#             string - if a char* is a string
+#             array - if the pointer points to the first element of an array. arraysizeparam should be populated for array to get logged.
+#             value - if the pointer is used to pass a value. Logger will show the value at the address.
+#             pointer - just an address. Logger will log the address.
+#
+#         "arraysizeparam: <arraysize parameter name>"
+#             if the param is a pointer type and it is an array of that type; which parameter denotes the size of that array. this parameter is a must for pointertype = array else the parameter will not be logged
+#
+#         "arrayelementstride: <No of bytes of each of the elements of the array>"
+#             if the param is a void pointer type and it is an array of that type; this paramenter tells the number of bytes of each of the element of the array. Hex values will be logged.
+#
+#==========================================================================
+
+- fun_name: simple
+  ret_type: void
+  params: []
+
+- fun_name: single_int
+  ret_type: int
+  params:
+  - name: a
+    type: int
+    inout: ''
+    pointertype: ''
+    arraysizeparam: ''
+    arrayelementstride: ''
+
+- fun_name: multiple_ints
+  ret_type: int
+  params:
+  - name: a
+    type: int
+    inout: ''
+    pointertype: ''
+    arraysizeparam: ''
+    arrayelementstride: ''
+  - name: b
+    type: int
+    inout: ''
+    pointertype: ''
+    arraysizeparam: ''
+    arrayelementstride: ''
+  - name: c
+    type: int
+    inout: ''
+    pointertype: ''
+    arraysizeparam: ''
+    arrayelementstride: ''
+
+- fun_name: different_ints
+  ret_type: int
+  params:
+  - name: s
+    type: size_t
+    inout: ''
+    pointertype: ''
+    arraysizeparam: ''
+    arrayelementstride: ''
+  - name: u
+    type: uint32_t
+    inout: ''
+    pointertype: ''
+    arraysizeparam: ''
+    arrayelementstride: ''
+  - name: c
+    type: char
+    inout: ''
+    pointertype: ''
+    arraysizeparam: ''
+    arrayelementstride: ''
+
+- fun_name: output_int
+  ret_type: int
+  params:
+  - name: a
+    type: int
+    inout: ''
+    pointertype: ''
+    arraysizeparam: ''
+    arrayelementstride: ''
+  - name: b
+    type: int
+    inout: ''
+    pointertype: ''
+    arraysizeparam: ''
+    arrayelementstride: ''
+  - name: out
+    type: int*
+    inout: ''
+    pointertype: 'value'
+    arraysizeparam: ''
+    arrayelementstride: ''
+
+- fun_name: single_string
+  ret_type: lattice_error_t
+  params:
+  - name: s
+    type: const char*
+    inout: ''
+    pointertype: 'string'
+    arraysizeparam: ''
+    arrayelementstride: ''
+
+- fun_name: multiple_strings
+  ret_type: lattice_error_t
+  params:
+  - name: sa
+    type: const char*
+    inout: ''
+    pointertype: 'string'
+    arraysizeparam: ''
+    arrayelementstride: ''
+  - name: sb
+    type: const char*
+    inout: ''
+    pointertype: 'string'
+    arraysizeparam: ''
+    arrayelementstride: ''
+  - name: sc
+    type: const char*
+    inout: ''
+    pointertype: 'string'
+    arraysizeparam: ''
+    arrayelementstride: ''
+
+- fun_name: modify_string
+  ret_type: lattice_error_t
+  params:
+  - name: s
+    type: char*
+    inout: ''
+    pointertype: 'string'
+    arraysizeparam: ''
+    arrayelementstride: ''
+
+- fun_name: single_buffer
+  ret_type: lattice_error_t
+  params:
+  - name: buf
+    type: const void*
+    inout: ''
+    pointertype: 'array'
+    arraysizeparam: 'len'
+    arrayelementstride: '1'
+  - name: len
+    type: size_t
+    inout: ''
+    pointertype: ''
+    arraysizeparam: ''
+    arrayelementstride: ''
+
+- fun_name: modify_buffer
+  ret_type: lattice_error_t
+  params:
+  - name: a
+    type: int
+    inout: ''
+    pointertype: ''
+    arraysizeparam: ''
+    arrayelementstride: ''
+  - name: buf
+    type: void*
+    inout: ''
+    pointertype: 'array'
+    arraysizeparam: 'len'
+    arrayelementstride: '1'
+  - name: len
+    type: size_t
+    inout: ''
+    pointertype: ''
+    arraysizeparam: ''
+    arrayelementstride: ''
+
+- fun_name: just_pointers
+  ret_type: lattice_error_t
+  params:
+  - name: pa
+    type: const void*
+    inout: ''
+    pointertype: 'pointer'
+    arraysizeparam: ''
+    arrayelementstride: ''
+  - name: pb
+    type: void*
+    inout: ''
+    pointertype: ''
+    arraysizeparam: ''
+    arrayelementstride: ''
+
+- fun_name: kitchen_sink
+  ret_type: lattice_error_t
+  params:
+  - name: a
+    type: int
+    inout: ''
+    pointertype: ''
+    arraysizeparam: ''
+    arrayelementstride: ''
+  - name: name
+    type: const char*
+    inout: ''
+    pointertype: 'string'
+    arraysizeparam: ''
+    arrayelementstride: ''
+  - name: out_name
+    type: char*
+    inout: ''
+    pointertype: 'string'
+    arraysizeparam: ''
+    arrayelementstride: ''
+  - name: buf
+    type: const void*
+    inout: ''
+    pointertype: 'array'
+    arraysizeparam: 'len'
+    arrayelementstride: '1'
+  - name: out_buf
+    type: void*
+    inout: ''
+    pointertype: 'array'
+    arraysizeparam: 'len'
+    arrayelementstride: '1'
+  - name: len
+    type: size_t
+    inout: ''
+    pointertype: ''
+    arraysizeparam: ''
+    arrayelementstride: ''
