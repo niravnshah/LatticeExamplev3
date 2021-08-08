@@ -74,32 +74,18 @@ def gen_header( header_dir, header_name, base_lib ):
     str += '''
 FILE* logfile = NULL;
 
-void log( const char* str, int indent = 0 )
+void log( const char* str )
 {
-    for( int i = 0; i < indent; i++ )
-        fprintf("    ");
     fprintf( logfile, "%s\\n", str );
 }
-void log_function_enter( const char* func_name )
-{
-    if( logfile != NULL )
-        logfile = fopen( "''' + log_name + '''", "a+" );
-    fprintf( logfile, "Enter : %s\\n", func_name );
-}
-void log_function_exit( const char* func_name )
-{
-    fprintf( logfile, "Exit  : %s\\n", func_name );
-    if( logfile != NULL )
-        fclose( logfile );
-}
-void log_start( const char* str = NULL )
+void log_start( const char* str )
 {
     if( logfile != NULL )
         logfile = fopen( "''' + log_name + '''", "a+" );
     if( str != NULL )
         fprintf( logfile, "%s\\n", str );
 }
-void log_end( const char* str = NULL )
+void log_end( const char* str )
 {
     if( str != NULL )
         fprintf( logfile, "%s\\n", str );
@@ -113,8 +99,8 @@ void log_end( const char* str = NULL )
 void* get_base_library_symbol( const char* func_name )
 {
     static HMODULE lib = NULL;
-    if( lib == NULL )\n
-        lib = LoadLibraryEx( "'''+ base_lib +'''", NULL, 0 );\n
+    if( lib == NULL )
+        lib = LoadLibraryEx( "'''+ base_lib +'''", NULL, 0 );
 
     void* pfnptr = NULL;
     if( lib )
@@ -137,9 +123,10 @@ def gen_func_header( func ):
 
 
 def gen_pre( func ):
-    str = '    // This section is pre processing\n'
-    
-    str += '    log_start(\"Enter : ' + func['fun_name'] + '\\n\");\n'
+    str = ''    
+    str += '    //log_start(\"Enter : ' + func['fun_name'] + '\");\n\n'
+    str += '    // This section is pre processing\n'
+    str += '    //log(\"Something in preprocessing\");\n'
 
     #for param in func['params']:
 
@@ -151,10 +138,8 @@ def gen_pre( func ):
 
 def gen_post( func ):
     str = '    // This section is Post processing\n'
-    
-    str += '    log_end(\"Exit  : ' + func['fun_name'] + '\\n\");\n'
-
-    str += '\n'
+    str += '    //log(\"Something in postprocessing\");\n\n'
+    str += '    //log_end(\"Exit  : ' + func['fun_name'] + '\");\n'
     return str
 
 
@@ -212,8 +197,8 @@ class MyDumper(yaml.SafeDumper):
 
 def generate_func_params_yaml( funcs, autogen_dir, header_name, force_gen_yaml ):
 
-    old_yaml = os.path.join( autogen_dir, header_name + 'func_params_old.yaml' )
-    yml = os.path.join( autogen_dir, header_name + 'func_params.yaml' )
+    old_yaml = os.path.join( autogen_dir, header_name + '_func_params_old.yaml' )
+    yml = os.path.join( autogen_dir, header_name + '_func_params.yaml' )
     
     if not os.path.exists( yml ):
         force_gen_yaml = True;
@@ -225,7 +210,7 @@ def generate_func_params_yaml( funcs, autogen_dir, header_name, force_gen_yaml )
         if os.path.exists( yml ):
             os.rename( yml, old_yaml )
 
-        print( 'Generating paramter yaml at ' + yml ) 
+        print( '\nGenerating paramter yaml at ' + yml ) 
         print( 'Modify the yaml file and run the script without -generateyaml parameter to load the updated yaml' )
     
         fout = open( yml, "w+" )
@@ -277,8 +262,9 @@ def generate_func_params_yaml( funcs, autogen_dir, header_name, force_gen_yaml )
         #    str += '\n#--------------------------------------------------------------------------\n'
 
         fout.write( yaml.dump(funcs, Dumper=MyDumper, sort_keys=False) )
-
         fout.close()
+    else:
+        print( '\nReading yaml from ' + yml )
 
     with open( yml ) as f:
         data = yaml.load(f, Loader=SafeLoader)
@@ -320,7 +306,7 @@ def AutoGen():
 
     funcs = parse_file( header_file )
 
-    force_gen_yaml = False
+    force_gen_yaml = True
 
     funcs = generate_func_params_yaml( funcs, autogen_dir, header_name, force_gen_yaml )
 
