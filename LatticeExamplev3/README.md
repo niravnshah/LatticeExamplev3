@@ -125,7 +125,7 @@ DLLEXPORT declarations are added in the lattice.h file to have proper function p
 |   |       |   lattice.h --------------------> Copy of lib/lattice.h
 |   |       |   lattice_func_params.yaml -----> Partial auto generated Customization file to provide parameter detailing for individual functions
 |   |       |   lattice_postproc.hpp ---------> Partial auto generated Customization file to provide post processing for individual functions
-|   |       |   lattice_preproc.hpp ----------> Partial auto generated Customization file to provide post processing for individual functions
+|   |       |   lattice_preproc.hpp ----------> Partial auto generated Customization file to provide pre processing for individual functions
 |   |                               
 |   +---bin
 |   |       CMakeLists.txt -------------------> Original cmake file
@@ -150,7 +150,7 @@ DLLEXPORT declarations are added in the lattice.h file to have proper function p
 |   |   |   |       lattice_orig.dll ---------> Dynamic loading library of lib/lattice.c
 |   |                       
 |   +---lib
-|   |   |   CMakeLists.txt -------------------> Modified to change the name to lattice_orig
+|   |   |   CMakeLists.txt -------------------> Modified to change the name to lattice_orig and change from static lib to shared(dynamic) lib
 |   |   |   lattice.c ------------------------> Original
 |   |   |   lattice.h ------------------------> Modified to add DLLExport
 |   |   |   
