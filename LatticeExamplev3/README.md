@@ -105,7 +105,7 @@ DLLEXPORT declarations are added in the lattice.h file to have proper function p
 
 
 ### File structure
-
+```console
 /LatticeExamplev3
 |   
 +---LatticeExamplev3
@@ -159,3 +159,4 @@ DLLEXPORT declarations are added in the lattice.h file to have proper function p
 |           Myscript.bat ---------------------> Test Script
 |           
 \---__MACOSX ---------------------------------> Original
+```
